@@ -75,14 +75,14 @@ class Carbon_CSV_Importer_Kit {
 
 		$file = $_FILES['file'];
 		if ( filesize( $file['tmp_name'] ) > $this->max_upload_size ) {
-			$return['message'] = sprintf( __( 'File must be below %s.', 'crb' ), size_format( $this->max_upload_size ) );
+			$return['message'] = sprintf( __( 'File must be below %s.', 'crbik' ), size_format( $this->max_upload_size ) );
 			wp_send_json( $return );
 		}
 
 		try {
 			$csv = new CsvFile( $file['tmp_name'] );
 			$return['status'] = 'success';
-			$return['message'] = __( 'Success... WIP', 'crb' );
+			$return['message'] = __( 'Success... WIP', 'crbik' );
 		} catch (Exception $e) {
 			$return['message'] = $e->getMessage();
 		}
