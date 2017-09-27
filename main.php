@@ -81,10 +81,17 @@ class Carbon_CSV_Importer_Kit {
 
 		try {
 			$csv = new CsvFile( $file['tmp_name'] );
-			$return['status'] = 'success';
-			$return['message'] = __( 'Success... WIP', 'crbik' );
 		} catch (Exception $e) {
 			$return['message'] = $e->getMessage();
+			wp_send_json( $return );
+		}
+
+		$csv_processor = new CsvProcessor( $csv );
+		if ( $csv_processor->fails() ) {
+			$return['message'] = $csv_processor->get_message();
+		} else {
+			$return['status'] = 'success';
+			$return['message'] = __( 'Success... WIP', 'crbik' );
 		}
 
 		wp_send_json( $return );
@@ -101,3 +108,27 @@ class Carbon_CSV_Importer_Kit {
 }
 
 $importer = new Carbon_CSV_Importer_Kit();
+
+class CsvProcessor {
+	private $csv;
+	private $fails;
+	private $message;
+
+	function __construct( $csv ) {
+		$this->csv = $csv;
+	}
+
+	public function process() {
+		// process rows
+		// if all goes well, set $this->fails to true, otherwise set to false
+		// if error occurs, set it to $this->message
+	}
+
+	public function fails() {
+		return $this->fails;
+	}
+
+	public function get_message() {
+		return $this->message;
+	}
+}

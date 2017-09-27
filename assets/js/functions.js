@@ -31,11 +31,13 @@
 				processData: false,
 				contentType: false,
 				success: function ( response ) {
+					$('.result-card').remove();
+
 					if ( response.status === 'success' ) {
-						
+						$('.main-card').after('<div class="card result-card">' + response.message + '</div>');
 					} else {
-					}
 						alert(response.message);
+					}
 				}
 			});
 		});

@@ -5,7 +5,7 @@
 		wp_nonce_field( 'crb_csv_import' );
 		?>
 		<input type="hidden" name="action" value="crb_ik_file_import">
-		<div class="card">
+		<div class="card main-card">
 			<h2><label for="choose-file"><?php _e( 'Choose file', 'crbik' ); ?></label></h2>
 			<input type="file" name="file" id="choose-file" accept=".csv, text/csv">
 			<?php
