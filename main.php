@@ -116,12 +116,16 @@ class CsvProcessor {
 
 	function __construct( $csv ) {
 		$this->csv = $csv;
+		$this->process();
 	}
 
 	public function process() {
 		// process rows
 		// if all goes well, set $this->fails to true, otherwise set to false
 		// if error occurs, set it to $this->message
+		$this->fails = false;
+		// $this->fails = true; // uncomment to send error
+		$this->message = __( 'An error occurred.', 'crb' );
 	}
 
 	public function fails() {
