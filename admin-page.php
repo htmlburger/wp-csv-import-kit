@@ -1,4 +1,4 @@
-<div class="wrap">
+<div class="wrap crb-ik-wrapper">
 	<h1 class="wp-heading-inline"><?php _e( 'CSV Import', 'crbik' ); ?></h1><!-- /.wp-heading-inline -->
 	<form action="" method="post" class="crb-ik-form" enctype="multipart/form-data">
 		<?php
@@ -13,4 +13,5 @@
 			?>
 		</div><!-- /.card -->
 	</form>
+	<div class="card result-card" style="display: none;"></div><!-- /.card result-card -->
 </div><!-- /.wrap -->

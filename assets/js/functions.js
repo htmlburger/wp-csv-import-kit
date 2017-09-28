@@ -7,8 +7,8 @@
 		$('.crb-ik-form').on('submit', function (e) {
 			e.preventDefault();
 
-			var $self = $(this);
-			var $file = $self.find('#choose-file');
+			var $self = $(this),
+				$file = $self.find('#choose-file');
 			if ( ! $file[0].files.length ) {
 				alert( 'Please choose a file.' );
 				return;
@@ -19,7 +19,8 @@
 				alert( 'File must be below ' + crbikSettings.maxUploadSizeHumanReadable + '.' );
 			}
 
-			var formData = new FormData();
+			var $messageArea = $self.next('.result-card'),
+				formData = new FormData();
 			formData.append('action', $self.find('input[name="action"]').val());
 			formData.append('_wpnonce', $self.find('input[name="_wpnonce"]').val());
 			formData.append('file', file);
@@ -30,14 +31,20 @@
 				data: formData,
 				processData: false,
 				contentType: false,
+				beforeSend: function () {
+					$messageArea.html('<div class="spinner"></div>');
+					$messageArea.addClass('loading');
+					$messageArea.show();
+				},
 				success: function ( response ) {
-					$('.result-card').remove();
-
 					if ( response.status === 'success' ) {
-						$('.main-card').after('<div class="card result-card">' + response.message + '</div>');
+						$messageArea.html( response.message );
 					} else {
 						alert(response.message);
 					}
+				},
+				complete: function() {
+					$messageArea.removeClass('loading');
 				}
 			});
 		});

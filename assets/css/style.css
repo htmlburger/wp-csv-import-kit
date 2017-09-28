@@ -1,0 +1,2 @@
+.crb-ik-wrapper .result-card { position: relative; }
+.crb-ik-wrapper .result-card.loading .spinner { visibility: visible; float: none; }

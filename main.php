@@ -41,7 +41,7 @@ class Carbon_CSV_Importer_Kit {
 
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
 		add_action( 'wp_ajax_crb_ik_file_import', array( $this, 'process_form' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 	}
 
 	public function add_admin_page() {
@@ -101,12 +101,14 @@ class Carbon_CSV_Importer_Kit {
 		wp_send_json( $return );
 	}
 
-	public function enqueue_scripts() {
+	public function enqueue_assets() {
 		wp_enqueue_script( 'crbik-functions', CRB_CSV_IK_ROOT_URL . '/assets/js/functions.js', array( 'jquery' ), '1.0.0', true );
 		wp_localize_script( 'crbik-functions', 'crbikSettings', array(
 			'maxUploadSizeBytes' => $this->max_upload_size,
 			'maxUploadSizeHumanReadable' => size_format( $this->max_upload_size )
 		) );
+
+		wp_enqueue_style( 'crbik-styles', CRB_CSV_IK_ROOT_URL . '/assets/css/style.css', array(), '1.0.0' );
 	}
 
 }
