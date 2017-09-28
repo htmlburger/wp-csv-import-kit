@@ -1,7 +1,7 @@
 <div class="wrap crb-ik-wrapper">
-	<h1 class="wp-heading-inline">{{title}}</h1><!-- /.wp-heading-inline -->
+	<h1 class="wp-heading-inline"><?php echo esc_html($title) ?></h1><!-- /.wp-heading-inline -->
 	<form action="" method="post" class="crb-ik-form" enctype="multipart/form-data">
-		<input type="hidden" name="action" value="{{ajax-action}}">
+		<input type="hidden" name="action" value="<?php echo esc_attr($ajax_action) ?>">
 		
 		<div class="card main-card">
 			<h2><?php _e( 'Choose CSV', 'crbik' ); ?></h2>
