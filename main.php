@@ -32,7 +32,7 @@ if ( ! defined( 'CRB_CSV_IK_ROOT_URL' ) ) {
 
 class Carbon_CSV_Importer_Kit {
 
-	private $required_permissions = 'manage_options';
+	private $required_capability = 'manage_options';
 	private $page_menu_slug       = 'crb-csv-import';
 	private $max_upload_size;
 
@@ -45,11 +45,15 @@ class Carbon_CSV_Importer_Kit {
 	}
 
 	public function add_admin_page() {
-		add_submenu_page( 'tools.php', __( 'CSV Import', 'crbik' ), __( 'CSV Import', 'crbik' ), $this->required_permissions, $this->page_menu_slug, array( $this, 'render_admin_page' ) );
+		// adds a sub-menu to the Tools page
+		// add_submenu_page( 'tools.php', __( 'CSV Import', 'crbik' ), __( 'CSV Import', 'crbik' ), $this->required_capability, $this->page_menu_slug, array( $this, 'render_admin_page' ) );
+
+		// adds a menu page
+		add_menu_page( __( 'CSV Import', 'crbik' ), __( 'CSV Import', 'crbik' ), $this->required_capability, $this->page_menu_slug, array( $this, 'render_admin_page' ) );
 	}
 
 	public function render_admin_page() {
-		if ( ! current_user_can( $this->required_permissions ) ) {
+		if ( ! current_user_can( $this->required_capability ) ) {
 			wp_die( __( 'You do not have permissions to access this page.', 'crbik' ) );
 		}
 
@@ -116,10 +120,10 @@ class CsvProcessor {
 
 	function __construct( $csv ) {
 		$this->csv = $csv;
-		$this->process();
+		$this->run();
 	}
 
-	public function process() {
+	public function run() {
 		// process rows
 		// if all goes well, set $this->fails to true, otherwise set to false
 		// if error occurs, set it to $this->message
