@@ -50,7 +50,19 @@
 					alert('Something went wrong, please try again later');
 				},
 				success: function ( response ) {
-					$messageArea.html( response.message );
+					var message;
+					if ( typeof response.message === 'object' ) {
+						var messageParts = [];
+						$.each(response.message, function (key, value) {
+							messageParts.push(value);
+						});
+
+						message = messageParts.join('<br/>');
+					} else {
+						message = response.message;
+					}
+
+					$messageArea.html( message );
 
 					if ( response.status === 'success' ) {
 						$messageArea.addClass('success');

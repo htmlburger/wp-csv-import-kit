@@ -1,8 +1,12 @@
 <?php
 
+namespace Carbon_CSV_Import_Kit;
+
 require(__DIR__ . '/../vendor/autoload.php');
 
 use \Carbon_CSV\CsvFile as CsvFile;
+use \Carbon_Validator as Validator;
+use \Carbon_FileUpload as Validator_FileUpload;
 
 define( 'CRB_CSV_IK_ROOT_PATH', dirname( __FILE__ ) . DIRECTORY_SEPARATOR );
 # Define root URL
@@ -32,7 +36,7 @@ if ( ! defined( 'CRB_CSV_IK_ROOT_URL' ) ) {
 	define( 'CRB_CSV_IK_ROOT_URL', untrailingslashit( $url ) );
 }
 
-class Carbon_CSV_Importer_Kit {
+class Import_Page {
 
 	static $enqueued_assets = false;
 	static $called = 0;
@@ -95,31 +99,37 @@ class Carbon_CSV_Importer_Kit {
 			'message' => ''
 		);
 
-		$nonce = isset( $_POST['_wpnonce'] ) ? $_POST['_wpnonce'] : false;
-		if ( ! wp_verify_nonce( $nonce, 'crb_csv_import' ) ) {
-			$return['message'] = __( 'Not allowed.', 'crbik' );
-			wp_send_json( $return );
-		}
+		Validator::extend( 'wp_nonce', function( $value, $parameters ) {
+			return ( wp_verify_nonce( $value, $parameters[0] ) === 1 );
+		} );
 
-		if ( empty( $_FILES['file'] ) ) {
-			$return['message'] = __( 'Please choose a file.', 'crbik' );
-			wp_send_json( $return );
-		}
+		$data = array_merge( $_POST, array(
+			'csv' => Validator_FileUpload::make( $_FILES['file'] )
+		) );
 
-		$file = $_FILES['file'];
-		if ( filesize( $file['tmp_name'] ) > $this->max_upload_size ) {
-			$return['message'] = sprintf( __( 'File must be below %s.', 'crbik' ), size_format( $this->max_upload_size ) );
-			wp_send_json( $return );
-		}
+		$validator_rules = array(
+			'_wpnonce'  => 'wp_nonce:crb_csv_import',
+			'csv'       => 'required|filesize:' . $this->max_upload_size,
+			'encoding'  => 'required',
+			'separator' => 'required',
+			'enclosure' => 'required'
+		);
 
-		if ( ! array_key_exists( 'encoding', $_POST ) || ! array_key_exists( 'separator', $_POST ) || ! array_key_exists( 'enclosure', $_POST ) ) {
-			$return['message'] = __( 'Misconfiguration. Please check the advanced settings section.', 'crbik' );
+		$validator_messages = array(
+			'_wpnonce.wp_nonce' => __( 'Invalid nonce.', 'crbik' ),
+			'csv|required'      => __( 'Please choose a file.', 'crbik' ),
+			'csv.filesize'      => sprintf( __( 'File must be below %s.', 'crbik' ), size_format( $this->max_upload_size ) ),
+		);
+
+		$validator = new Validator( $data, $validator_rules, $validator_messages );
+		if ( $validator->fails() ) {
+			$return['message'] = $validator->get_errors();
 			wp_send_json( $return );
 		}
 
 		try {
-			$csv = new CsvFile( $file['tmp_name'], $_POST['separator'], stripslashes( $_POST['enclosure'] ) );
-			$csv->set_encoding( $_POST['encoding'] );
+			$csv = new CsvFile( $_FILES['file']['tmp_name'], $data['separator'], stripslashes( $data['enclosure'] ) );
+			$csv->set_encoding( $data['encoding'] );
 		} catch (Exception $e) {
 			$return['message'] = $e->getMessage();
 			wp_send_json( $return );

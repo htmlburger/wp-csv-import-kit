@@ -2,7 +2,9 @@
 
 require_once(__DIR__ . "/../../src/Carbon_CSV_Importer_Kit.php");
 
-$submenu_importer = new Carbon_CSV_Importer_Kit( array(
+use Carbon_CSV_Import_Kit\Import_Page;
+
+$submenu_importer = new Import_Page( array(
 	'type'        => 'submenu',
 	'parent_slug' => 'tools.php',
 	'title'       => __( 'CSV Import', 'crbik' ),

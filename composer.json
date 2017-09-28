@@ -5,6 +5,13 @@
 
     "require": {
         "php": "^5.4.0 || ^7.0",
-        "htmlburger/carbon-csv": "1.0.*"
+        "htmlburger/carbon-csv": "1.0.*",
+        "htmlburger/carbon-validator": "^1.0.0"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Carbon_CSV_Import_Kit\\": "src/"
+        }
     }
 }
