@@ -1,6 +1,6 @@
 {
 
-    "name": "htmlburger/carbon-csv",
+    "name": "htmlburger/wp-csv-import-kit",
     "description": "Boilerplate code for importing CSV files in WordPress projects",
 
     "require": {
