@@ -1,0 +1,16 @@
+{
+
+    "name": "htmlburger/carbon-csv",
+    "description": "Boilerplate code for importing CSV files in WordPress projects",
+
+    "require": {
+        "php": "^5.4.0 || ^7.0",
+        "htmlburger/carbon-csv": "^1.*"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Carbon_CSV_Importer_Kit\\": "src/"
+        }
+    }
+}
