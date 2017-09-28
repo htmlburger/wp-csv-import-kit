@@ -32,32 +32,59 @@ if ( ! defined( 'CRB_CSV_IK_ROOT_URL' ) ) {
 
 class Carbon_CSV_Importer_Kit {
 
-	private $required_capability = 'manage_options';
-	private $page_menu_slug       = 'crb-csv-import';
-	private $max_upload_size;
+	static $enqueued_assets = false;
+	static $called = 0;
 
-	function __construct() {
+	private $page_settings = array(
+		'type'        => 'submenu',
+		'parent_slug' => 'tools.php',
+		'title'       => 'CSV Import',
+		'menu_slug'   => 'crb-csv-import',
+		'capability'  => 'manage_options'
+	);
+	private $ajax_action_name;
+	private $max_upload_size;
+	private $processor;
+	private $callback;
+
+	function __construct( $custom_settings ) {
+		self::$called++;
+
+		$this->ajax_action_name = 'crb_ik_file_import' . self::$called;
 		$this->max_upload_size = wp_max_upload_size();
+		$this->page_settings = wp_parse_args( $custom_settings, $this->page_settings );
 
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
-		add_action( 'wp_ajax_crb_ik_file_import', array( $this, 'process_form' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_' . $this->ajax_action_name, array( $this, 'process_form' ) );
+		if ( ! self::$enqueued_assets ) {
+			self::$enqueued_assets = true;
+
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		}
+	}
+
+	public function run( $callback ) {
+		$this->callback = $callback;
 	}
 
 	public function add_admin_page() {
-		// adds a sub-menu to the Tools page
-		// add_submenu_page( 'tools.php', __( 'CSV Import', 'crbik' ), __( 'CSV Import', 'crbik' ), $this->required_capability, $this->page_menu_slug, array( $this, 'render_admin_page' ) );
-
-		// adds a menu page
-		add_menu_page( __( 'CSV Import', 'crbik' ), __( 'CSV Import', 'crbik' ), $this->required_capability, $this->page_menu_slug, array( $this, 'render_admin_page' ) );
+		if ( $this->page_settings['type'] === 'submenu' ) {
+			add_submenu_page( $this->page_settings['parent_slug'], $this->page_settings['title'], $this->page_settings['title'], $this->page_settings['capability'], $this->page_settings['menu_slug'], array( $this, 'render_admin_page' ) );
+		} else {
+			add_menu_page( $this->page_settings['title'], $this->page_settings['title'], $this->page_settings['capability'], $this->page_settings['menu_slug'], array( $this, 'render_admin_page' ) );
+		}
 	}
 
 	public function render_admin_page() {
-		if ( ! current_user_can( $this->required_capability ) ) {
+		if ( ! current_user_can( $this->page_settings['capability'] ) ) {
 			wp_die( __( 'You do not have permissions to access this page.', 'crbik' ) );
 		}
 
-		require( CRB_CSV_IK_ROOT_PATH . 'admin-page.php' );
+		ob_start();
+			require( CRB_CSV_IK_ROOT_PATH . 'admin-page.php' );
+		$html = str_replace( array( '{{title}}', '{{ajax-action}}' ), array( $this->page_settings['title'], $this->ajax_action_name ), ob_get_clean() );
+
+		echo $html;
 	}
 
 	public function process_form() {
@@ -83,20 +110,20 @@ class Carbon_CSV_Importer_Kit {
 			wp_send_json( $return );
 		}
 
+		if ( ! array_key_exists( 'encoding', $_POST ) || ! array_key_exists( 'separator', $_POST ) || ! array_key_exists( 'enclosure', $_POST ) ) {
+			$return['message'] = __( 'Misconfiguration. Please check the advanced settings section.', 'crbik' );
+			wp_send_json( $return );
+		}
+
 		try {
-			$csv = new CsvFile( $file['tmp_name'] );
+			$csv = new CsvFile( $file['tmp_name'], $_POST['separator'], stripslashes( $_POST['enclosure'] ) );
+			$csv->set_encoding( $_POST['encoding'] );
 		} catch (Exception $e) {
 			$return['message'] = $e->getMessage();
 			wp_send_json( $return );
 		}
 
-		$csv_processor = new CsvProcessor( $csv );
-		if ( $csv_processor->fails() ) {
-			$return['message'] = $csv_processor->get_message();
-		} else {
-			$return['status'] = 'success';
-			$return['message'] = __( 'Success... WIP', 'crbik' );
-		}
+		$return = call_user_func( $this->callback, $csv );
 
 		wp_send_json( $return );
 	}
@@ -111,34 +138,4 @@ class Carbon_CSV_Importer_Kit {
 		wp_enqueue_style( 'crbik-styles', CRB_CSV_IK_ROOT_URL . '/assets/css/style.css', array(), '1.0.0' );
 	}
 
-}
-
-$importer = new Carbon_CSV_Importer_Kit();
-
-class CsvProcessor {
-	private $csv;
-	private $fails;
-	private $message;
-
-	function __construct( $csv ) {
-		$this->csv = $csv;
-		$this->run();
-	}
-
-	public function run() {
-		// process rows
-		// if all goes well, set $this->fails to true, otherwise set to false
-		// if error occurs, set it to $this->message
-		$this->fails = false;
-		// $this->fails = true; // uncomment to send error
-		$this->message = __( 'An error occurred.', 'crb' );
-	}
-
-	public function fails() {
-		return $this->fails;
-	}
-
-	public function get_message() {
-		return $this->message;
-	}
 }

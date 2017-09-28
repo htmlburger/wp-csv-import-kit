@@ -4,6 +4,12 @@
 
 	$doc.ready(function () {
 
+		$('.crb-ik-form .advanced').on('click', function (e) {
+			e.preventDefault();
+
+			$(this).next('.settings-section').stop(true, false).slideToggle();
+		});
+
 		$('.crb-ik-form').on('submit', function (e) {
 			e.preventDefault();
 
@@ -23,6 +29,9 @@
 				formData = new FormData();
 			formData.append('action', $self.find('input[name="action"]').val());
 			formData.append('_wpnonce', $self.find('input[name="_wpnonce"]').val());
+			formData.append('encoding', $self.find('select[name="encoding"]').val());
+			formData.append('separator', $self.find('select[name="separator"]').val());
+			formData.append('enclosure', $self.find('select[name="enclosure"]').val());
 			formData.append('file', file);
 
 			$.ajax({
@@ -34,13 +43,22 @@
 				beforeSend: function () {
 					$messageArea.html('<div class="spinner"></div>');
 					$messageArea.addClass('loading');
+					$messageArea.removeClass('success error');
 					$messageArea.show();
 				},
+				error: function () {
+					alert('Something went wrong, please try again later');
+				},
 				success: function ( response ) {
+					$messageArea.html( response.message );
+
 					if ( response.status === 'success' ) {
-						$messageArea.html( response.message );
+						$messageArea.addClass('success');
+					} else if (response.status === 'error') {
+						$messageArea.addClass('error');
 					} else {
-						alert(response.message);
+						$messageArea.hide();
+						alert('Something went wrong.');
 					}
 				},
 				complete: function() {
