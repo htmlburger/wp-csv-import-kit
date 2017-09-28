@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . "/../../src/Carbon_CSV_Importer_Kit.php");
+
 $submenu_importer = new Carbon_CSV_Importer_Kit( array(
 	'type'        => 'submenu',
 	'parent_slug' => 'tools.php',

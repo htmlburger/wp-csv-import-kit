@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . "/../../src/Carbon_CSV_Importer_Kit.php");
+
 $menu_importer = new Carbon_CSV_Importer_Kit( array(
 	'type'       => 'menu',
 	'title'      => __( 'CSV Import', 'crbik' ),

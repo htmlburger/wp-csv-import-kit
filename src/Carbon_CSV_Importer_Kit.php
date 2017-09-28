@@ -1,5 +1,7 @@
 <?php
 
+require(__DIR__ . '/../vendor/autoload.php');
+
 use \Carbon_CSV\CsvFile as CsvFile;
 
 define( 'CRB_CSV_IK_ROOT_PATH', dirname( __FILE__ ) . DIRECTORY_SEPARATOR );
