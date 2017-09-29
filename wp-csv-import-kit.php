@@ -1,4 +1,12 @@
 <?php
+/**
+ *  Plugin Name: Carbon CSV Import Kit
+ *  Description: A small library for creating CSV import pages in the WordPress dashboard
+ *  Version 0.0.1
+ *  License: GPL2
+ */
+
+
 require __DIR__ . '/vendor/autoload.php';
 
 define( 'CRB_CSV_IK_ROOT_PATH', dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR );
