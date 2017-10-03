@@ -5,10 +5,8 @@ namespace Carbon_CSV;
 use \Carbon_CSV\CsvFile as CsvFile;
 
 class Import_Process {
-	public $csv;
-	public $settings = array(
-		'rows_per_request' => 3
-	);
+	private $token;
+	private $step;
 
 	private $current_action;
 	private $allowed_actions = array(
@@ -16,22 +14,27 @@ class Import_Process {
 		'import_ended'
 	);
 
+	public $csv;
+	public $settings = array(
+		'rows_per_request' => 3
+	);
+
 	function __construct( array $custom_settings ) {
 		$this->settings = wp_parse_args( $custom_settings, $this->settings );
 	}
 
 	public function import_row( $row ) {
-		
+
 	}
-	
+
 	public function setup_csv() {
-		
+
 	}
 	public function will_start() {
-		
+
 	}
 	public function ended() {
-		
+
 	}
 
 	public function progress() {

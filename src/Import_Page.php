@@ -17,12 +17,6 @@ class Import_Page {
 		'template'    => __DIR__ . DIRECTORY_SEPARATOR . 'admin-page.php'
 	);
 
-	public $rows_per_request = 1;
-	public $current_step;
-
-	public $csv;
-
-	private $token;
 	private $ajax_action_name;
 	private $max_upload_size;
 	private $import_process;
