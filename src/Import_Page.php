@@ -2,47 +2,50 @@
 
 namespace Carbon_CSV;
 
-use \Carbon_CSV\CsvFile as CsvFile;
 use \Carbon_Validator as Validator;
 use \Carbon_FileUpload as Validator_FileUpload;
 
 class Import_Page {
 	static $instance_count = 0;
 
-	public $type        = 'submenu';
-	public $parent_slug = 'tools.php';
-	public $title       = 'CSV Import';
-	public $menu_slug   = 'crb-csv-import-%d';
-	public $capability  = 'manage_options';
-	public $template    = __DIR__ . DIRECTORY_SEPARATOR . 'admin-page.php';
+	private $page_settings = array(
+		'type'        => 'submenu',
+		'parent_slug' => 'tools.php',
+		'title'       => 'CSV Import',
+		'menu_slug'   => 'crb-csv-import-%d',
+		'capability'  => 'manage_options',
+		'template'    => __DIR__ . DIRECTORY_SEPARATOR . 'admin-page.php'
+	);
+
 	public $rows_per_request = 1;
 	public $current_step;
 
 	public $csv;
 
-	private $current_action;
 	private $token;
 	private $ajax_action_name;
 	private $max_upload_size;
-	private $processor;
-	private $allowed_actions = array(
-		'import_row',
-		'import_ended'
-	);
+	private $import_process;
 
-	function __construct() {
+	function __construct( Import_Process $import_process, array $custom_settings ) {
+		$this->import_process = $import_process;
+
 		self::$instance_count++;
 
 		$this->ajax_action_name = 'crb_ik_file_import' . self::$instance_count;
 		$this->max_upload_size = wp_max_upload_size();
 
-		$this->menu_slug = sprintf($this->menu_slug, self::$instance_count);
+		if (!isset($custom_settings['menu_slug'])) {
+			$custom_settings['menu_slug'] = sprintf($this->page_settings['menu_slug'], self::$instance_count);
+		}
+
+		$this->page_settings = wp_parse_args( $custom_settings, $this->page_settings );
 
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
 
 		add_action( 'wp_ajax_' . $this->ajax_action_name, array( $this, 'process_form' ) );
-		add_action( 'wp_ajax_import_row', array( $this, 'import_progress' ) );
-		add_action( 'wp_ajax_import_ended', array( $this, 'import_progress' ) );
+		add_action( 'wp_ajax_import_row', array( $this->import_process, 'progress' ) );
+		add_action( 'wp_ajax_import_ended', array( $this->import_process, 'progress' ) );
 
 		if ( self::$instance_count === 1 ) {
 			// Initializations applied only for the first CSV Import Page ...
@@ -59,38 +62,38 @@ class Import_Page {
 	public function setup() {}
 
 	public function add_admin_page() {
-		if ( $this->type === 'submenu' ) {
+		if ( $this->page_settings['type'] === 'submenu' ) {
 			add_submenu_page(
-				$this->parent_slug,
-				$this->title,
-				$this->title,
-				$this->capability,
-				$this->menu_slug,
+				$this->page_settings['parent_slug'],
+				$this->page_settings['title'],
+				$this->page_settings['title'],
+				$this->page_settings['capability'],
+				$this->page_settings['menu_slug'],
 				array( $this, 'render_admin_page' )
 			);
 		} else {
 			add_menu_page(
-				$this->title,
-				$this->title,
-				$this->capability,
-				$this->menu_slug,
+				$this->page_settings['title'],
+				$this->page_settings['title'],
+				$this->page_settings['capability'],
+				$this->page_settings['menu_slug'],
 				array( $this, 'render_admin_page' )
 			);
 		}
 	}
 
 	public function render_admin_page() {
-		if ( ! current_user_can( $this->capability ) ) {
+		if ( ! current_user_can( $this->page_settings['capability'] ) ) {
 			wp_die( __( 'You do not have permissions to access this page.', 'crbik' ) );
 		}
 
 		$vars = [
-			'title' => $this->title,
+			'title' => $this->page_settings['title'],
 			'ajax_action' => $this->ajax_action_name,
 		];
 		extract($vars);
 
-		require( $this->template );
+		require( $this->page_settings['template'] );
 	}
 
 	public function process_form() {
@@ -138,10 +141,10 @@ class Import_Page {
 			update_option( 'crb_import_' . $token, $file['file'] ); // save url?
 			update_option( 'crb_import_' . $token . '_started', current_time( 'timestamp' ) );
 
-			$this->csv = new CsvFile( $file['file'] );
-			$this->setup_csv( $_POST );
+			$this->import_process->csv = new CsvFile( $file['file'] );
+			$this->import_process->setup_csv();
 
-			$this->import_started( $_POST );
+			$this->import_process->will_start();
 
 			$return['status'] = 'success';
 			$return['step'] = 1;
@@ -151,111 +154,6 @@ class Import_Page {
 		} else {
 			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
 		}
-
-		wp_send_json( $return );
-	}
-
-	public function setup_csv( $data ) {}
-	public function import_started( $data ) {}
-	public function import_row( $row, $data ) {}
-	public function import_ended( $data ) {}
-
-	public function import_progress() {
-		$action = $_POST['action'];
-
-		$return = array(
-			'status'  => 'error',
-			'message' => ''
-		);
-
-		if ( ! in_array( $action, $this->allowed_actions ) ) {
-			$return['message'] = __( 'Not allowed.', 'crb' );
-			wp_send_json( $return );
-		}
-
-		$this->current_action = $action;
-
-		$token = isset( $_POST['token'] ) ? $_POST['token'] : false;
-
-		if ( ! $token ) {
-			$return['message'] = __( 'Not allowed. Missing token.', 'crb' );
-			wp_send_json( $return );
-		}
-
-		$this->token = $token;
-
-		$file = get_option( 'crb_import_' . $token );
-		if ( empty( $file ) ) {
-			// do cleanup here?
-			$return['message'] = __( 'Old import.', 'crb' );
-			wp_send_json( $return );
-		}
-
-		$this->csv = new CsvFile( $file );
-		$this->setup_csv( $_POST );
-
-		$this->step = isset( $_POST['step'] ) ? $_POST['step'] : 1;
-
-		// $this->processor = new Import_Processor();
-		// $this->processor->token = $token;
-		// $this->processor->csv = $this->csv;
-		$this->process_import();
-	}
-
-	public function process_import() {
-
-		$return = array(
-			'status'  => 'success'
-		);
-
-		if ( $this->current_action === 'import_ended' ) {
-			$this->import_ended( $_POST );
-
-			$return['message'] = __( 'Import ended.', 'crb' );
-
-			wp_send_json( $return );
-		}
-
-		$imported_rows = [];
-
-		$start_row = ( $this->step * $this->rows_per_request ) - 1;
-		$this->csv->skip_to_row( $start_row );
-
-		$row_number = 0;
-		foreach ($this->csv as $row) {
-			try {
-				$import_status = $this->import_row($row, $_POST);
-			} catch (\Exception $e) {
-				$import_status = false;
-			}
-
-			if ($import_status === null || $import_status === true) {
-
-			} else if($import_status === false) {
-				// NOT OK!
-			} else {
-				// not expected ... ?
-				throw LogicException("Unexpected return value: " . $import_status);
-			}
-
-			$imported_rows[] = $row;
-
-			$row_number++;
-			if ( $row_number >= $this->rows_per_request ) {
-				break;
-			}
-		}
-
-		if ( empty( $imported_rows ) ) {
-			$next_action = 'import_ended';
-		} else {
-			$next_action = 'import_row';
-			$return['data']['rows'] = $imported_rows;
-		}
-
-		$return['step'] = $this->step += 1;
-		$return['next_action'] = $next_action;
-		$return['token'] = $this->token;
 
 		wp_send_json( $return );
 	}
@@ -284,10 +182,4 @@ class Import_Page {
 			'1.0.0'
 		);
 	}
-}
-
-class Import_Processor {
-	private $token;
-	private $csv;
-	private $action;
 }
