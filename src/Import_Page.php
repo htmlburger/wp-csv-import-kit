@@ -16,14 +16,17 @@ class Import_Page {
 	public $capability  = 'manage_options';
 	public $template    = __DIR__ . DIRECTORY_SEPARATOR . 'admin-page.php';
 	public $rows_per_request = 1;
+	public $current_step;
 
 	public $csv;
 
+	private $current_action;
+	private $token;
 	private $ajax_action_name;
 	private $max_upload_size;
 	private $processor;
 	private $allowed_actions = array(
-		'import_step',
+		'import_row',
 		'import_ended'
 	);
 
@@ -38,7 +41,7 @@ class Import_Page {
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
 
 		add_action( 'wp_ajax_' . $this->ajax_action_name, array( $this, 'process_form' ) );
-		add_action( 'wp_ajax_import_step', array( $this, 'import_progress' ) );
+		add_action( 'wp_ajax_import_row', array( $this, 'import_progress' ) );
 		add_action( 'wp_ajax_import_ended', array( $this, 'import_progress' ) );
 
 		if ( self::$instance_count === 1 ) {
@@ -49,13 +52,11 @@ class Import_Page {
 			// This is useful for macOS line endings ...
 			ini_set( 'auto_detect_line_endings', 1 );
 		}
+
+		$this->setup();
 	}
 
 	public function setup() {}
-
-	public function add_page() {
-		$this->setup();
-	}
 
 	public function add_admin_page() {
 		if ( $this->type === 'submenu' ) {
@@ -140,10 +141,13 @@ class Import_Page {
 			$this->csv = new CsvFile( $file['file'] );
 			$this->setup_csv( $_POST );
 
-			$return = $this->import_started( $_POST );
+			$this->import_started( $_POST );
+
 			$return['status'] = 'success';
-			$return['data']['token'] = $token;
-			$return['data']['importer'] = 'started';
+			$return['step'] = 1;
+			$return['token'] = $token;
+			$return['next_action'] = 'import_row';
+			$return['message'] = __( 'Import process started.', 'crb' );
 		} else {
 			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
 		}
@@ -152,10 +156,8 @@ class Import_Page {
 	}
 
 	public function setup_csv( $data ) {}
-	public function import_started( $data ) {
-		return [];
-	}
-	public function import_step( $data ) {}
+	public function import_started( $data ) {}
+	public function import_row( $row, $data ) {}
 	public function import_ended( $data ) {}
 
 	public function import_progress() {
@@ -171,12 +173,16 @@ class Import_Page {
 			wp_send_json( $return );
 		}
 
+		$this->current_action = $action;
+
 		$token = isset( $_POST['token'] ) ? $_POST['token'] : false;
 
 		if ( ! $token ) {
 			$return['message'] = __( 'Not allowed. Missing token.', 'crb' );
 			wp_send_json( $return );
 		}
+
+		$this->token = $token;
 
 		$file = get_option( 'crb_import_' . $token );
 		if ( empty( $file ) ) {
@@ -188,21 +194,68 @@ class Import_Page {
 		$this->csv = new CsvFile( $file );
 		$this->setup_csv( $_POST );
 
-		try {
-			$return = call_user_func( array( $this, $action ), $_POST );
+		$this->step = isset( $_POST['step'] ) ? $_POST['step'] : 1;
 
-			if ( empty( $return['rows'] ) ) {
-				$next_action = 'import_ended';
-				$return['step'] = '';
-			} else {
-				$next_action = 'import_step';
+		// $this->processor = new Import_Processor();
+		// $this->processor->token = $token;
+		// $this->processor->csv = $this->csv;
+		$this->process_import();
+	}
+
+	public function process_import() {
+
+		$return = array(
+			'status'  => 'success'
+		);
+
+		if ( $this->current_action === 'import_ended' ) {
+			$this->import_ended( $_POST );
+
+			$return['message'] = __( 'Import ended.', 'crb' );
+
+			wp_send_json( $return );
+		}
+
+		$imported_rows = [];
+
+		$start_row = ( $this->step * $this->rows_per_request ) - 1;
+		$this->csv->skip_to_row( $start_row );
+
+		$row_number = 0;
+		foreach ($this->csv as $row) {
+			try {
+				$import_status = $this->import_row($row, $_POST);
+			} catch (\Exception $e) {
+				$import_status = false;
 			}
 
-			$return['data']['next_action'] = $next_action;
-			$return['data']['token'] = $token;
-		} catch (\Exception $e) {
-			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
+			if ($import_status === null || $import_status === true) {
+
+			} else if($import_status === false) {
+				// NOT OK!
+			} else {
+				// not expected ... ?
+				throw LogicException("Unexpected return value: " . $import_status);
+			}
+
+			$imported_rows[] = $row;
+
+			$row_number++;
+			if ( $row_number >= $this->rows_per_request ) {
+				break;
+			}
 		}
+
+		if ( empty( $imported_rows ) ) {
+			$next_action = 'import_ended';
+		} else {
+			$next_action = 'import_row';
+			$return['data']['rows'] = $imported_rows;
+		}
+
+		$return['step'] = $this->step += 1;
+		$return['next_action'] = $next_action;
+		$return['token'] = $this->token;
 
 		wp_send_json( $return );
 	}
@@ -231,5 +284,10 @@ class Import_Page {
 			'1.0.0'
 		);
 	}
+}
 
+class Import_Processor {
+	private $token;
+	private $csv;
+	private $action;
 }

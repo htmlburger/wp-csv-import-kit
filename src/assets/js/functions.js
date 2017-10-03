@@ -66,9 +66,8 @@
 
 					if ( response.status === 'success' ) {
 						$messageArea.addClass('success');
-						if ( response.data.importer === 'started' ) {
-							processStep('import_step', response.data.token, 1);
-						}
+
+						processStep(response.next_action, response.token, 1);
 					} else if (response.status === 'error') {
 						$messageArea.addClass('error');
 					} else {
@@ -96,19 +95,18 @@
 				step: step
 			},
 			success: function ( response ) {
-				if ( step === '' ) {
+				if ( !response.hasOwnProperty('step') ) {
+					$messageArea.append( response.message );
 					return;
 				}
 
 				if ( step === 1 ) {
-					$messageArea.html('');
+					// $messageArea.html('');
 				}
+				processStep( response.next_action, response.token, response.step );
 
-				if ( typeof response.rows !== 'undefined' && response.rows.length ) {
-					processStep( response.data.next_action, response.data.token, response.step );
-					$messageArea.append('<p>' + response.rows.join('</p><p>') + '</p>');
-				} else {
-					processStep( 'import_ended', response.data.token, response.step );
+				if ( typeof response.data !== 'undefined' && response.data.hasOwnProperty('rows') ) {
+					$messageArea.append('<p>' + response.data.rows.join('</p><p>') + '</p>');
 				}
 			}
 		});
