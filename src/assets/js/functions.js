@@ -66,6 +66,9 @@
 
 					if ( response.status === 'success' ) {
 						$messageArea.addClass('success');
+						if ( response.data.importer === 'started' ) {
+							processStep('import_step', response.data.token, 1);
+						}
 					} else if (response.status === 'error') {
 						$messageArea.addClass('error');
 					} else {
@@ -80,5 +83,35 @@
 		});
 
 	});
+
+	function processStep( action, token, step ) {
+		var $messageArea = $('.crb-ik-form').next('.result-card');
+
+		$.ajax({
+			method: 'POST',
+			url: ajaxurl,
+			data: {
+				action: action,
+				token: token,
+				step: step
+			},
+			success: function ( response ) {
+				if ( step === '' ) {
+					return;
+				}
+
+				if ( step === 1 ) {
+					$messageArea.html('');
+				}
+
+				if ( typeof response.rows !== 'undefined' && response.rows.length ) {
+					processStep( response.data.next_action, response.data.token, response.step );
+					$messageArea.append('<p>' + response.rows.join('</p><p>') + '</p>');
+				} else {
+					processStep( 'import_ended', response.data.token, response.step );
+				}
+			}
+		});
+	}
 
 })(jQuery, window, document);

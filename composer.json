@@ -11,7 +11,7 @@
 
     "autoload": {
         "psr-4": {
-            "Carbon_CSV_Import_Kit\\": "src/"
+            "Carbon_CSV\\": "src/"
         }
     }
 }
