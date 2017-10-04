@@ -21,7 +21,7 @@ class Import_Page {
 	private $max_upload_size;
 	private $import_process;
 
-	function __construct( Import_Process $import_process, array $custom_settings ) {
+	function __construct( Import_Process $import_process, array $custom_settings = array() ) {
 		$this->import_process = $import_process;
 
 		self::$instance_count++;

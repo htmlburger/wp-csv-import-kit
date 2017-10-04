@@ -19,7 +19,7 @@ class Import_Process {
 		'rows_per_request' => 3
 	);
 
-	function __construct( array $custom_settings ) {
+	function __construct( array $custom_settings = array() ) {
 		$this->settings = wp_parse_args( $custom_settings, $this->settings );
 	}
 
@@ -30,9 +30,11 @@ class Import_Process {
 	public function setup_csv() {
 
 	}
+
 	public function will_start() {
 
 	}
+
 	public function ended() {
 
 	}
@@ -73,10 +75,10 @@ class Import_Process {
 
 		$this->step = isset( $_POST['step'] ) ? $_POST['step'] : 1;
 
-		$this->run();
+		$this->start();
 	}
 
-	public function run() {
+	public function start() {
 		$return = array(
 			'status'  => 'success'
 		);
