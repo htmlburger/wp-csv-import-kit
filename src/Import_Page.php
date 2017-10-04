@@ -7,6 +7,7 @@ use \Carbon_FileUpload as Validator_FileUpload;
 
 class Import_Page {
 	static $instance_count = 0;
+	static $import_page_menu_slugs = array();
 
 	private $page_settings = array(
 		'type'        => 'submenu',
@@ -34,6 +35,12 @@ class Import_Page {
 		}
 
 		$this->page_settings = wp_parse_args( $custom_settings, $this->page_settings );
+
+		if ( in_array( $this->page_settings['menu_slug'], self::$import_page_menu_slugs ) ) {
+			wp_die('Menu slug should be unique.');
+		}
+
+		self::$import_page_menu_slugs[] = $this->page_settings['menu_slug'];
 
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
 
@@ -107,7 +114,7 @@ class Import_Page {
 		);
 
 		$validator_messages = array(
-			'_wpnonce.wp_nonce' => __( 'Invalid nonce.', 'crbik' ),
+			'_wpnonce.wp_nonce' => __( 'Please refresh the page and try again.', 'crbik' ),
 			'csv|required'      => __( 'Please choose a file.', 'crbik' ),
 			'csv.filesize'      => sprintf( __( 'File must be below %s.', 'crbik' ), size_format( $this->max_upload_size ) ),
 		);
