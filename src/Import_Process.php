@@ -40,7 +40,7 @@ class Import_Process {
 	}
 
 	public function progress() {
-		$action = $_POST['action'];
+		$action = isset( $_POST['action'] ) ? $_POST['action'] : false;
 
 		$return = array(
 			'status'  => 'error',

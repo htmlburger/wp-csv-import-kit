@@ -49,11 +49,7 @@ class Import_Page {
 			// This is useful for macOS line endings ...
 			ini_set( 'auto_detect_line_endings', 1 );
 		}
-
-		$this->setup();
 	}
-
-	public function setup() {}
 
 	public function add_admin_page() {
 		if ( $this->page_settings['type'] === 'submenu' ) {
