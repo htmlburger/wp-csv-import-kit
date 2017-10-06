@@ -1,7 +1,3 @@
-.crb-ik-wrapper .result-card { position: relative; }
-.crb-ik-wrapper .result-card .spinner { visibility: visible; float: none; }
-.crb-ik-wrapper .result-card.error,
-.crb-ik-wrapper .result-card.success { margin-top: 20px; padding: .7em 2em 1em; border-top: 4px solid #dc3232; border-left: none; }
-.crb-ik-wrapper .result-card.success { border-top-color: #46b450; }
-
 .crb-ik-wrapper .advanced-settings-wrapper { margin-top: 20px; }
+.crb-ik-wrapper .progress-card { position: relative; padding: .7em 2em; max-width: 572px; box-sizing: border-box; }
+.crb-ik-wrapper .progress-card .progress-bar { position: absolute; top: 0; bottom: 0; left: 0; background: #0073aa; color: #fff; }

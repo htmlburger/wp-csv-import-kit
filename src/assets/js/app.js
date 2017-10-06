@@ -2,33 +2,32 @@ var app = new Vue({
 	el: '#crb-import-app',
 	data: {
 		advancedSettingsVisible: false,
-		loading: false,
+
+		state: 'pending', // loading, done, error
+
 		file: false,
-		formData: [
-			{ name: 'action', value : '' },
-			{ name: '_wpnonce', value : '' },
-			{ name: 'encoding', value : 'UTF-8' },
-			{ name: 'separator', value : ';' },
-			{ name: 'enclosure', value : "'" }
-		],
-		progressAreaShow: false,
+		formData: {
+			'action' : '',
+			'_wpnonce' : '',
+			'encoding' : 'UTF-8',
+			'separator' : ';',
+			'enclosure' : "'"
+		},
+		progressBarTotal: 0,
+		progressBarCurrent: 0,
 		progressAreaMessages: [],
 	},
 	mounted: function () {
-		this.formData[0].value = this.$refs.form.getAttribute('data-action');
-		this.formData[1].value = document.getElementById('_wpnonce').value;
+		this.formData.action = this.$refs.form.getAttribute('data-action');
+		this.formData._wpnonce = document.getElementById('_wpnonce').value;
 	},
-	// computed: {
-	// 	hasMessages: function () {
-	// 		return !!this.messages.length;
-	// 	}
-	// },
-	watch: {
-		loading: function () {
-			this.progressAreaShow = true;
-		},
-		progressAreaMessages: function (value) {
-			this.progressAreaShow = !!value.length;
+	computed: {
+		progressBarPassed: function () {
+			if ( this.progressBarTotal < this.progressBarCurrent ) {
+				this.progressBarCurrent = this.progressBarTotal;
+			}
+
+			return  (this.progressBarCurrent / this.progressBarTotal ) * 100;
 		}
 	},
 	methods: {
@@ -55,6 +54,8 @@ var app = new Vue({
 			var formData = this.populateFormData();
 
 			this.progressAreaMessages = [];
+			this.progressBarTotal = 0;
+			this.progressBarCurrent = 0;
 
 			this.sendRequest( formData );
 
@@ -62,11 +63,10 @@ var app = new Vue({
 		populateFormData: function () {
 			var formData = new FormData();
 
-			for (var i = 0; i <= this.formData.length - 1; i++) {
-				var name = this.formData[i].name;
-				var value = this.formData[i].value;
-
-				formData.append( name, value );
+			for( var key in this.formData ) {
+				if ( this.formData.hasOwnProperty(key) ) {
+					formData.append( key, this.formData[key] );
+				}
 			}
 
 			formData.append( 'file', this.file );
@@ -75,11 +75,21 @@ var app = new Vue({
 		},
 		sendRequest: function ( formData ) {
 			var self = this;
-			self.loading = true;
+			self.state = 'loading';
 
 			axios.post(ajaxurl, formData)
 				.then(function (response) {
-					self.loading = false;
+					self.state = 'done';
+
+					if ( typeof response.data.progress_bar !== 'undefined' ) {
+						if ( response.data.progress_bar.hasOwnProperty('total') ) {
+							self.progressBarTotal = response.data.progress_bar.total;
+						}
+
+						if ( response.data.progress_bar.hasOwnProperty('current') ) {
+							self.progressBarCurrent = response.data.progress_bar.current;
+						}
+					}
 
 					if ( typeof response.data.message !== 'undefined' ) {
 						self.progressAreaMessages.push(response.data.message);
@@ -105,8 +115,7 @@ var app = new Vue({
 					self.sendRequest(formData);
 				})
 				.catch(function (response) {
-					self.loading = false;
-					// console.log(response);
+					self.state = 'error';
 				});
 		}
 	}

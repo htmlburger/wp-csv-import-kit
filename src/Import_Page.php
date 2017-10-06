@@ -157,6 +157,7 @@ class Import_Page {
 			$return['status'] = 'success';
 			$return['step'] = 1;
 			$return['token'] = $token;
+			$return['progress_bar']['total'] = $this->import_process->csv->count();
 			$return['next_action'] = 'import_row';
 			$return['message'] = __( 'Import process started.', 'crb' );
 		} else {
@@ -257,6 +258,7 @@ class Import_Page {
 
 		$return['step'] = $this->step += 1;
 		$return['next_action'] = $next_action;
+		$return['progress_bar']['current'] = $this->step;
 		$return['token'] = $this->token;
 
 		wp_send_json( $return );
