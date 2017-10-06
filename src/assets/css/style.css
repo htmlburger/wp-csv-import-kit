@@ -1,8 +1,7 @@
 .crb-ik-wrapper .result-card { position: relative; }
-.crb-ik-wrapper .result-card.loading .spinner { visibility: visible; float: none; }
+.crb-ik-wrapper .result-card .spinner { visibility: visible; float: none; }
 .crb-ik-wrapper .result-card.error,
 .crb-ik-wrapper .result-card.success { margin-top: 20px; padding: .7em 2em 1em; border-top: 4px solid #dc3232; border-left: none; }
 .crb-ik-wrapper .result-card.success { border-top-color: #46b450; }
 
 .crb-ik-wrapper .advanced-settings-wrapper { margin-top: 20px; }
-.crb-ik-wrapper .advanced-settings-wrapper .form-table { display: none; }

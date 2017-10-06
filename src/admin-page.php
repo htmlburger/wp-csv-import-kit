@@ -1,22 +1,22 @@
-<div class="wrap crb-ik-wrapper">
+<div id="crb-import-app" class="wrap crb-ik-wrapper">
 	<h1 class="wp-heading-inline"><?php echo esc_html($title) ?></h1><!-- /.wp-heading-inline -->
-	<form action="" method="post" class="crb-ik-form" enctype="multipart/form-data">
-		<input type="hidden" name="action" value="<?php echo esc_attr($ajax_action) ?>">
+	<form action="" method="post" class="crb-ik-form" enctype="multipart/form-data" @submit.prevent="processForm" ref="form" data-action="<?php echo esc_attr($ajax_action) ?>">
+		<input type="hidden" name="action" value="<?php echo esc_attr( $ajax_action ); ?>" v-model="formData.action">
 		
 		<div class="card main-card">
 			<h2><?php _e( 'Choose CSV', 'crbik' ); ?></h2>
-			<input type="file" name="file" id="choose-file" accept=".csv, text/csv">
+			<input type="file" name="file" id="choose-file" accept=".csv, text/csv" @change="onFileChange">
 
 			<div class="advanced-settings-wrapper">
-				<a href="#" class="advanced"><?php _e( 'Advanced Settings', 'crbik' ); ?></a>
-				<div class="form-table settings-section">
+				<a href="#" class="advanced" @click.prevent="toggleAdvancedSettings"><?php _e( 'Advanced Settings', 'crbik' ); ?></a>
+				<div class="form-table settings-section" v-if="advancedSettingsVisible">
 					<table>
 						<tr>
 							<th><label for="encoding"><?php _e( 'Encoding', 'crbik' ); ?></label></th>
 							<td>
-								<select name="encoding" id="encoding">
+								<select name="encoding" id="encoding" v-model="formData.encoding">
 									<?php foreach (mb_list_encodings() as $encoding): ?>
-										<option value="<?php echo $encoding ?>" <?php echo strtolower($encoding) === 'utf-8' ? 'selected' : '' ?>><?php echo $encoding ?></option>
+										<option value="<?php echo $encoding ?>"><?php echo $encoding ?></option>
 									<?php endforeach ?>
 								</select>
 								<p class="description"><?php _e( 'Specify encoding of the selected file.', 'crbik' ); ?></p>
@@ -25,8 +25,8 @@
 						<tr>
 							<th><label for="separator"><?php _e( 'Separator', 'crbik' ); ?></label></th>
 							<td>
-								<select name="separator" id="separator">
-									<option value="," selected>Comma ( , )</option>
+								<select name="separator" id="separator" v-model="formData.separator">
+									<option value=",">Comma ( , )</option>
 									<option value=";">Semi-colon ( ; )</option>
 									<option value=":">Colon ( : )</option>
 									<option value="|">Pipe ( | )</option>
@@ -36,7 +36,7 @@
 						<tr>
 							<th><label for="enclosure"><?php _e( 'Enclosure', 'crbik' ); ?></label></th>
 							<td>
-								<select name="enclosure" id="enclosure">
+								<select name="enclosure" id="enclosure" v-model="formData.enclosure">
 									<option value='"'>Quotation Mark ( " )</option>
 									<option value="'">Apostrophe ( ' )</option>
 								</select>
@@ -52,5 +52,10 @@
 		
 		<?php wp_nonce_field( 'crb_csv_import' ); ?>
 	</form>
-	<div class="card result-card" style="display: none;"></div><!-- /.card result-card -->
+	<div class="card result-card" v-if="progressAreaShow">
+		<div class="spinner" v-if="loading"></div>
+		<p v-for="message in progressAreaMessages">
+			<span v-text="message"></span>
+		</p>
+	</div><!-- /.card result-card -->
 </div><!-- /.wrap -->

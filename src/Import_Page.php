@@ -263,10 +263,12 @@ class Import_Page {
 	}
 
 	public function enqueue_assets() {
+		wp_enqueue_script( 'vue', 'https://unpkg.com/vue@2.4.4/dist/vue.js' );
+		wp_enqueue_script( 'axios', 'https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js', array( 'vue' ) );
 		wp_enqueue_script(
 			'crbik-functions',
-			CRB_CSV_IK_ROOT_URL . '/assets/js/functions.js',
-			array( 'jquery' ),
+			CRB_CSV_IK_ROOT_URL . '/assets/js/app.js',
+			array( 'vue', 'axios' ),
 			'1.0.0',
 			true
 		);
