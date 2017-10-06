@@ -1,9 +1,5 @@
 ## About
 
-This repo contains boilerplate code to be used as starting point for importing CSV files in WordPress projects. 
+This repo contains a WordPress plugin, for creating a dashboard page, to be used when importing CSV files.
 
-Developers are expected to use the code via: 
-
-`composer create-project htmlburger/wp-csv-import-kit csv-import`
-
-This will create a directory csv-import and provide load file that should be included in the theme's functions.php code(or plugin load file). 
+Check the examples in `_examples` to see how to create a page.
