@@ -27,14 +27,13 @@ class Names_Import_Process extends Import_Process {
 	}
 }
 
-$process = new Names_Import_Process( array(
-	'rows_per_request' => 1
-) );
+$process = new Names_Import_Process();
 
 $page = new Import_Page( $process, array(
 	'title'      => __( 'CSV Import', 'crb' ),
 	'type'        => 'submenu',
 	'parent_slug' => 'tools.php',
 	'menu_slug'  => 'crb-csv-import',
-	'capability' => 'manage_options'
+	'capability' => 'manage_options',
+	'rows_per_request' => 1
 ) );
