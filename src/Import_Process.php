@@ -10,6 +10,7 @@ abstract class Import_Process {
 
 	public function set_csv(CsvFile $csv) {
 		$this->csv = $csv;
+		$this->setup_csv();
 	}
 
 	public function get_csv() {

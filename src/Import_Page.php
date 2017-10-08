@@ -150,11 +150,7 @@ class Import_Page {
 			update_option( 'crb_import_' . $token . '_started', current_time( 'timestamp' ) );
 
 			$csv = new CsvFile( $file['file'] );
-
 			$this->import_process->set_csv($csv);
-
-			$this->import_process->setup_csv();
-
 			$this->import_process->will_start();
 
 			$return['status'] = 'success';
@@ -204,7 +200,6 @@ class Import_Page {
 		$csv = new CsvFile( $file );
 
 		$this->import_process->set_csv($csv);
-		$this->import_process->setup_csv();
 
 		$this->step = isset( $_POST['step'] ) ? $_POST['step'] : 1;
 

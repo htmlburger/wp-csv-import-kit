@@ -15,7 +15,7 @@ var app = new Vue({
 		},
 		progressBarTotal: 0,
 		progressBarCurrent: 0,
-		progressAreaMessages: [],
+		logMessages: [],
 	},
 	mounted: function () {
 		this.formData.action = this.$refs.form.getAttribute('data-action');
@@ -53,7 +53,7 @@ var app = new Vue({
 
 			var formData = this.populateFormData();
 
-			this.progressAreaMessages = [];
+			this.logMessages = ['Initiating new import ... '];
 			this.progressBarTotal = 0;
 			this.progressBarCurrent = 0;
 
@@ -79,6 +79,13 @@ var app = new Vue({
 
 			axios.post(ajaxurl, formData)
 				.then(function (response) {
+					if (typeof response.data !== 'object') {
+						// the server returned malformed JSON
+						self.logMessages.push('Got bad JSON response from the server. See the console for more info. ');
+						console.error('Bad JSON response: ' + response.data);
+						self.state = 'error';
+						return;
+					}
 					self.state = 'done';
 
 					if ( typeof response.data.progress_bar !== 'undefined' ) {
@@ -92,7 +99,7 @@ var app = new Vue({
 					}
 
 					if ( typeof response.data.message !== 'undefined' ) {
-						self.progressAreaMessages.push(response.data.message);
+						self.logMessages.push(response.data.message);
 					}
 
 					if ( !response.data.hasOwnProperty('step') ) {

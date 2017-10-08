@@ -59,7 +59,7 @@
 			<div class="progress-bar" :style="{ width: progressBarPassed + '%' }"></div><!-- /.progress-bar -->
 		</div><!-- /.card -->
 
-		<p v-for="message in progressAreaMessages">
+		<p v-for="message in logMessages">
 			<span v-text="message"></span>
 		</p>
 	</template>
