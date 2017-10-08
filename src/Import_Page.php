@@ -149,7 +149,10 @@ class Import_Page {
 			update_option( 'crb_import_' . $token, $file['file'] ); // save url?
 			update_option( 'crb_import_' . $token . '_started', current_time( 'timestamp' ) );
 
-			$this->import_process->csv = new CsvFile( $file['file'] );
+			$csv = new CsvFile( $file['file'] );
+
+			$this->import_process->set_csv($csv);
+
 			$this->import_process->setup_csv();
 
 			$this->import_process->will_start();
@@ -157,7 +160,7 @@ class Import_Page {
 			$return['status'] = 'success';
 			$return['step'] = 1;
 			$return['token'] = $token;
-			$return['progress_bar']['total'] = $this->import_process->csv->count();
+			$return['progress_bar']['total'] = $csv->count();
 			$return['next_action'] = 'import_row';
 			$return['message'] = __( 'Import process started.', 'crb' );
 		} else {
@@ -198,8 +201,10 @@ class Import_Page {
 			wp_send_json( $return );
 		}
 
-		$this->import_process->csv = new CsvFile( $file );
-		$this->import_process->setup_csv( $_POST );
+		$csv = new CsvFile( $file );
+
+		$this->import_process->set_csv($csv);
+		$this->import_process->setup_csv();
 
 		$this->step = isset( $_POST['step'] ) ? $_POST['step'] : 1;
 
@@ -222,10 +227,11 @@ class Import_Page {
 		$imported_rows = [];
 
 		$start_row = ( $this->step - 1 ) * $this->settings['rows_per_request'];
-		$this->import_process->csv->skip_to_row( $start_row );
+		$csv = $this->import_process->get_csv();
+		$csv->skip_to_row( $start_row );
 
 		$row_number = 0;
-		foreach ($this->import_process->csv as $row) {
+		foreach ($csv as $row) {
 			try {
 				$import_status = $this->import_process->import_row($row);
 			} catch (\Exception $e) {

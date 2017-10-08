@@ -6,7 +6,15 @@ use \Carbon_CSV\CsvFile as CsvFile;
 
 abstract class Import_Process {
 
-	private $csv;
+	protected $csv;
+
+	public function set_csv(CsvFile $csv) {
+		$this->csv = $csv;
+	}
+
+	public function get_csv() {
+		return $this->csv;
+	}
 
 	abstract public function import_row( $row );
 
