@@ -266,6 +266,7 @@ class Import_Page {
 	}
 
 	public function enqueue_assets() {
+		wp_enqueue_style( 'font-awesome', 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css' );
 		wp_enqueue_script( 'vue', 'https://unpkg.com/vue@2.4.4/dist/vue.js' );
 		wp_enqueue_script( 'axios', 'https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js', array( 'vue' ) );
 		wp_enqueue_script(

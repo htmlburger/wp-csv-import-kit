@@ -62,6 +62,7 @@
 		<p v-for="message in logMessages">
 			<span v-text="message"></span>
 		</p>
+		<i class="fa fa-refresh fa-spin" v-if="state === 'loading'"></i>
 	</template>
 
 </div><!-- /.wrap -->
