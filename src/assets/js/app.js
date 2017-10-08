@@ -10,8 +10,8 @@ var app = new Vue({
 			'action' : '',
 			'_wpnonce' : '',
 			'encoding' : 'UTF-8',
-			'separator' : ';',
-			'enclosure' : "'"
+			'separator' : ',',
+			'enclosure' : '"'
 		},
 		progressBarTotal: 0,
 		progressBarCurrent: 0,
