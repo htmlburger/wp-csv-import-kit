@@ -20,6 +20,16 @@ var app = new Vue({
 	mounted: function () {
 		this.formData.action = this.$refs.form.getAttribute('data-action');
 		this.formData._wpnonce = document.getElementById('_wpnonce').value;
+
+		var self = this;
+		window.addEventListener('beforeunload', function (e) {
+			var message = 'An import is currently running. Please confirm that you\'d like to abort it';
+
+			if (self.state === 'loading') {
+				e.returnValue = message;
+				return message;
+			}
+		});
 	},
 	computed: {
 		progressBarPassed: function () {
