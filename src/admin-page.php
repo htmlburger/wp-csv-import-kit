@@ -55,14 +55,14 @@
 	</form>
 
 	<template v-if="state !== 'pending'">
-		<div class="card progress-card" v-if="progressBarTotal > 0 && progressBarPassed > 0">
-			<div class="progress-bar" :style="{ width: progressBarPassed + '%' }"></div><!-- /.progress-bar -->
+		<div class="card progress-card" v-if="rowsCount > 0 && processedRowsCount > 0">
+			<div class="progress-bar" :style="{ width: progressPercentage + '%' }"><i class="fa fa-refresh fa-spin" v-if="state === 'loading'"></i></div><!-- /.progress-bar -->
 		</div><!-- /.card -->
 
 		<p v-for="message in logMessages">
-			<span v-text="message"></span>
+			<span v-text="message"></span> <i class="fa fa-refresh fa-spin" v-if="state === 'loading'"></i>
 		</p>
-		<i class="fa fa-refresh fa-spin" v-if="state === 'loading'"></i>
+		
 	</template>
 
 </div><!-- /.wrap -->

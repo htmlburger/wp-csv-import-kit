@@ -154,11 +154,8 @@ class Import_Page {
 			$this->import_process->will_start();
 
 			$return['status'] = 'success';
-			$return['step'] = 1;
 			$return['token'] = $token;
-			$return['progress_bar']['total'] = $csv->count();
-			$return['next_action'] = 'import_row';
-			$return['message'] = __( 'Import process started.', 'crb' );
+			$return['rows_count'] = $csv->count();
 		} else {
 			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
 		}
@@ -259,7 +256,7 @@ class Import_Page {
 
 		$return['step'] = $this->step += 1;
 		$return['next_action'] = $next_action;
-		$return['progress_bar']['current'] = $this->step;
+		$return['progress_bar']['current'] = $this->step * $this->settings['rows_per_request'];
 		$return['token'] = $this->token;
 
 		wp_send_json( $return );

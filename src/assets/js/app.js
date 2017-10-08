@@ -13,8 +13,8 @@ var app = new Vue({
 			'separator' : ',',
 			'enclosure' : '"'
 		},
-		progressBarTotal: 0,
-		progressBarCurrent: 0,
+		rowsCount: 0,
+		processedRowsCount: 0,
 		logMessages: [],
 	},
 	mounted: function () {
@@ -32,12 +32,8 @@ var app = new Vue({
 		});
 	},
 	computed: {
-		progressBarPassed: function () {
-			if ( this.progressBarTotal < this.progressBarCurrent ) {
-				this.progressBarCurrent = this.progressBarTotal;
-			}
-
-			return  (this.progressBarCurrent / this.progressBarTotal ) * 100;
+		progressPercentage: function () {
+			return  (this.processedRowsCount / this.rowsCount ) * 100;
 		}
 	},
 	methods: {
@@ -61,16 +57,15 @@ var app = new Vue({
 				alert( 'File must be below ' + crbikSettings.maxUploadSizeHumanReadable + '.' );
 			}
 
-			var formData = this.populateFormData();
+			this.rowsCount = 0;
+			this.processedRowsCount = 0;
 
-			this.logMessages = ['Initiating new import ... '];
-			this.progressBarTotal = 0;
-			this.progressBarCurrent = 0;
-
-			this.sendRequest( formData );
-
+			this.initiateImport().
+				then(this.progressImport.bind(this));
 		},
-		populateFormData: function () {
+		initiateImport: function () {
+			this.logMessages = ['Initiating new import ... '];
+
 			var formData = new FormData();
 
 			for( var key in this.formData ) {
@@ -81,7 +76,36 @@ var app = new Vue({
 
 			formData.append( 'file', this.file );
 
-			return formData;
+			return axios.post(ajaxurl, formData)
+				.then(function (response) {
+					this.token = response.data.token;
+					this.rowsCount = response.data.rows_count;
+				}.bind(this))
+				.catch(this.handleAjaxError.bind(this));
+		},
+		progressImport: function () {
+
+			axios.post(ajaxurl, {
+				token: this.token,
+				offset: this.processedRows
+			}).then(function (response) {
+				var resp = response.data;
+
+				this.processedRowsCount += resp.processedRows
+				
+				if (this.processedRowsCount < this.rowsCount) {
+					this.progressImport();
+				} else {
+					this.completeImport();
+				}
+
+			}.bind(this));
+		},
+		handleAjaxError: function () {
+			debugger;	
+		},
+		completeImport: function () {
+			debugger
 		},
 		sendRequest: function ( formData ) {
 			var self = this;
@@ -100,11 +124,11 @@ var app = new Vue({
 
 					if ( typeof response.data.progress_bar !== 'undefined' ) {
 						if ( response.data.progress_bar.hasOwnProperty('total') ) {
-							self.progressBarTotal = response.data.progress_bar.total;
+							self.rowsCount = response.data.progress_bar.total;
 						}
 
 						if ( response.data.progress_bar.hasOwnProperty('current') ) {
-							self.progressBarCurrent = response.data.progress_bar.current;
+							self.processedRowsCount = response.data.progress_bar.current;
 						}
 					}
 
