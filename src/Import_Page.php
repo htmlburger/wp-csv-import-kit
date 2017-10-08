@@ -9,7 +9,7 @@ class Import_Page {
 	static $instance_count = 0;
 	static $import_page_menu_slugs = array();
 
-	private $settings = array(
+	protected $settings = array(
 		'type'             => 'submenu',
 		'parent_slug'      => 'tools.php',
 		'title'            => 'CSV Import',
@@ -19,14 +19,14 @@ class Import_Page {
 		'rows_per_request' => 3
 	);
 
-	private $token;
-	private $step;
-	private $ajax_action_name;
-	private $max_upload_size;
-	private $import_process;
+	protected $token;
+	protected $step;
+	protected $ajax_action_name;
+	protected $max_upload_size;
+	protected $import_process;
 
-	private $current_action;
-	private $allowed_actions = array(
+	protected $current_action;
+	protected $allowed_actions = array(
 		'import_row',
 		'import_ended'
 	);
