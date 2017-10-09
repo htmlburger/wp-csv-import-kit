@@ -28,7 +28,6 @@ class Import_Page {
 	protected $current_action;
 	protected $allowed_actions = array(
 		'import_row',
-		'import_ended'
 	);
 
 	public $csv;
@@ -57,7 +56,9 @@ class Import_Page {
 
 		add_action( 'wp_ajax_' . $this->ajax_action_name, array( $this, 'process_form' ) );
 		add_action( 'wp_ajax_import_row', array( $this, 'progress' ) );
-		add_action( 'wp_ajax_import_ended', array( $this, 'progress' ) );
+// var_dump($_SERVER);
+// print_r($_POST);
+// exit(__FILE__ . ':' . __LINE__);
 
 		if ( self::$instance_count === 1 ) {
 			// Initializations applied only for the first CSV Import Page ...
@@ -164,6 +165,7 @@ class Import_Page {
 	}
 
 	public function progress() {
+exit(__FILE__ . ':' . __LINE__);
 		$action = isset( $_POST['action'] ) ? $_POST['action'] : false;
 
 		$return = array(
@@ -208,21 +210,12 @@ class Import_Page {
 			'status'  => 'success'
 		);
 
-		if ( $this->current_action === 'import_ended' ) {
-			$this->import_process->ended();
-
-			$return['message'] = __( 'Import ended.', 'crb' );
-
-			wp_send_json( $return );
-		}
-
 		$imported_rows = [];
 
-		$start_row = ( $this->step - 1 ) * $this->settings['rows_per_request'];
+		$offset_row = $_POST['offset'];
 		$csv = $this->import_process->get_csv();
-		$csv->skip_to_row( $start_row );
+		$csv->skip_to_row( $offset_row );
 
-		$row_number = 0;
 		foreach ($csv as $row) {
 			try {
 				$import_status = $this->import_process->import_row($row);
@@ -231,9 +224,9 @@ class Import_Page {
 			}
 
 			if ($import_status === null || $import_status === true) {
-
+				// The row has been imported
 			} else if($import_status === false) {
-				// NOT OK!
+				// TODO: how should we handle this ?
 			} else {
 				// not expected ... ?
 				throw LogicException("Unexpected return value: " . $import_status);
@@ -241,22 +234,19 @@ class Import_Page {
 
 			$imported_rows[] = $row;
 
-			$row_number++;
-			if ( $row_number >= $this->settings['rows_per_request'] ) {
+			if ( count( $imported_rows ) >= $this->settings['rows_per_request'] ) {
 				break;
 			}
 		}
 
-		if ( empty( $imported_rows ) ) {
-			$next_action = 'import_ended';
-		} else {
-			$next_action = 'import_row';
-			$return['data']['rows'] = $imported_rows;
-		}
+		$new_offset = count( $imported_rows ) + $offset_row;
 
-		$return['step'] = $this->step += 1;
-		$return['next_action'] = $next_action;
-		$return['progress_bar']['current'] = $this->step * $this->settings['rows_per_request'];
+		if ( $new_offset >= $csv->count() ) {
+			$this->import_process->ended();
+			$return['message'] = __( 'Import ended.', 'crb' );
+		} else {
+			$return['processed_rows'] = $imported_rows;
+		}
 		$return['token'] = $this->token;
 
 		wp_send_json( $return );

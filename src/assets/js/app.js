@@ -60,8 +60,9 @@ var app = new Vue({
 			this.rowsCount = 0;
 			this.processedRowsCount = 0;
 
-			this.initiateImport().
-				then(this.progressImport.bind(this));
+			this
+				.initiateImport()
+				.then(this.progressImport.bind(this));
 		},
 		initiateImport: function () {
 			this.logMessages = ['Initiating new import ... '];
@@ -84,14 +85,19 @@ var app = new Vue({
 				.catch(this.handleAjaxError.bind(this));
 		},
 		progressImport: function () {
-
-			axios.post(ajaxurl, {
-				token: this.token,
-				offset: this.processedRows
+			axios({
+				url: ajaxurl,
+				method: 'post',
+				data: {
+					action: 'import_row',
+					_wpnonce: this.formData._wpnonce,
+					token: this.token,
+					offset: this.processedRowsCount
+				}
 			}).then(function (response) {
 				var resp = response.data;
 
-				this.processedRowsCount += resp.processedRows
+				this.processedRowsCount += resp.processed_rows.length;
 				
 				if (this.processedRowsCount < this.rowsCount) {
 					this.progressImport();
