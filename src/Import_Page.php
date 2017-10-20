@@ -151,7 +151,6 @@ class Import_Page {
 
 			$csv = new CsvFile( $file['file'] );
 			$this->import_process->set_csv($csv);
-			// dd($this->import_process);
 			$this->import_process->will_start();
 
 			$return['status'] = 'success';
