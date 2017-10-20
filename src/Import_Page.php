@@ -259,7 +259,7 @@ class Import_Page {
 
 		$return['step'] = $this->step += 1;
 		$return['next_action'] = $next_action;
-		$return['progress_bar']['current'] = $this->step;
+		$return['progress_bar']['current'] = ( $this->step * $this->settings['rows_per_request'] - $this->settings['rows_per_request'] );
 		$return['token'] = $this->token;
 
 		wp_send_json( $return );
