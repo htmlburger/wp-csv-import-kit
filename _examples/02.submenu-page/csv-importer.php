@@ -23,7 +23,7 @@ class Names_Import_Process extends Import_Process {
 	}
 
 	public function setup_csv() {
-		$this->csv->use_first_row_as_header();
+		$this->use_first_row_as_header();
 	}
 }
 
