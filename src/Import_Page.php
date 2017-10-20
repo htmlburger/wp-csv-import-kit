@@ -151,6 +151,7 @@ class Import_Page {
 
 			$csv = new CsvFile( $file['file'] );
 			$this->import_process->set_csv($csv);
+			// dd($this->import_process);
 			$this->import_process->will_start();
 
 			$return['status'] = 'success';
@@ -221,8 +222,8 @@ class Import_Page {
 
 		$imported_rows = [];
 
-		$start_row = ( $this->step - 1 ) * $this->settings['rows_per_request'];
 		$csv = $this->import_process->get_csv();
+		$start_row = ( intval( $this->step ) === 1 && $this->import_process->first_row_header ) ? 1 : ( $this->step - 1 ) * $this->settings['rows_per_request'];
 		$csv->skip_to_row( $start_row );
 
 		$row_number = 0;
