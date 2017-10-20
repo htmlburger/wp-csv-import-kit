@@ -221,8 +221,8 @@ class Import_Page {
 
 		$imported_rows = [];
 
-		$start_row = ( $this->step - 1 ) * $this->settings['rows_per_request'];
 		$csv = $this->import_process->get_csv();
+		$start_row = ( intval( $this->step ) === 1 && $this->import_process->first_row_header ) ? 1 : ( $this->step - 1 ) * $this->settings['rows_per_request'];
 		$csv->skip_to_row( $start_row );
 
 		$row_number = 0;
@@ -259,7 +259,7 @@ class Import_Page {
 
 		$return['step'] = $this->step += 1;
 		$return['next_action'] = $next_action;
-		$return['progress_bar']['current'] = $this->step;
+		$return['progress_bar']['current'] = ( $this->step * $this->settings['rows_per_request'] - $this->settings['rows_per_request'] );
 		$return['token'] = $this->token;
 
 		wp_send_json( $return );
