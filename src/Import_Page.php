@@ -30,6 +30,7 @@ class Import_Page {
 		'import_row',
 		'import_ended'
 	);
+	protected $current_instance = 0;
 
 	public $csv;
 
@@ -37,6 +38,10 @@ class Import_Page {
 		$this->import_process = $import_process;
 
 		self::$instance_count++;
+		$this->current_instance = self::$instance_count;
+		foreach ( $this->allowed_actions as $index => $action ) {
+			$this->allowed_actions[ $index ] = $action . $this->current_instance;
+		}
 
 		$this->ajax_action_name = 'crb_ik_file_import' . self::$instance_count;
 		$this->max_upload_size = wp_max_upload_size();
@@ -56,8 +61,8 @@ class Import_Page {
 		add_action( 'admin_menu', array( $this, 'add_admin_page' ) );
 
 		add_action( 'wp_ajax_' . $this->ajax_action_name, array( $this, 'process_form' ) );
-		add_action( 'wp_ajax_import_row', array( $this, 'progress' ) );
-		add_action( 'wp_ajax_import_ended', array( $this, 'progress' ) );
+		add_action( 'wp_ajax_import_row' . $this->current_instance, array( $this, 'progress' ) );
+		add_action( 'wp_ajax_import_ended' . $this->current_instance, array( $this, 'progress' ) );
 
 		if ( self::$instance_count === 1 ) {
 			// Initializations applied only for the first CSV Import Page ...
@@ -157,7 +162,7 @@ class Import_Page {
 			$return['step'] = 1;
 			$return['token'] = $token;
 			$return['progress_bar']['total'] = $csv->count();
-			$return['next_action'] = 'import_row';
+			$return['next_action'] = 'import_row' . $this->current_instance;
 			$return['message'] = __( 'Import process started.', 'crb' );
 		} else {
 			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
@@ -211,7 +216,7 @@ class Import_Page {
 			'status'  => 'success'
 		);
 
-		if ( $this->current_action === 'import_ended' ) {
+		if ( $this->current_action === 'import_ended' . $this->current_instance ) {
 			$this->import_process->ended();
 
 			$return['message'] = __( 'Import ended.', 'crb' );
@@ -258,7 +263,7 @@ class Import_Page {
 		}
 
 		$return['step'] = $this->step += 1;
-		$return['next_action'] = $next_action;
+		$return['next_action'] = $next_action . $this->current_instance;
 		$return['progress_bar']['current'] = ( $this->step * $this->settings['rows_per_request'] - $this->settings['rows_per_request'] );
 		$return['token'] = $this->token;
 
