@@ -227,11 +227,16 @@ class Import_Page {
 		$imported_rows = [];
 
 		$csv = $this->import_process->get_csv();
-		$start_row = ( intval( $this->step ) === 1 && $this->import_process->first_row_header ) ? 1 : ( $this->step - 1 ) * $this->settings['rows_per_request'];
+		$total_rows = $csv->count();
+		$start_row = ( intval( $this->step ) === 1 && $this->import_process->first_row_header ) ? 1 : ( $this->step - 1 ) * $this->settings['rows_per_request'] + 1;
 		$csv->skip_to_row( $start_row );
 
 		$row_number = 0;
 		foreach ($csv as $row) {
+			if ( $start_row > $total_rows ) {
+				break;
+			}
+
 			try {
 				$import_status = $this->import_process->import_row($row);
 			} catch (\Exception $e) {
