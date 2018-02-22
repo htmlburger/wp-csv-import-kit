@@ -165,7 +165,7 @@ class Import_Page {
 			$return['next_action'] = 'import_row' . $this->current_instance;
 			$return['message'] = __( 'Import process started.', 'crb' );
 		} else {
-			$return['message'] = __( 'An error occurred. Please try again later.', 'crb' );
+			$return['message'] = $file['error'];
 		}
 
 		wp_send_json( $return );
@@ -238,18 +238,8 @@ class Import_Page {
 			}
 
 			try {
-				$import_status = $this->import_process->import_row($row);
+				$this->import_process->import_row($row);
 			} catch (\Exception $e) {
-				$import_status = false;
-			}
-
-			if ($import_status === null || $import_status === true) {
-
-			} else if($import_status === false) {
-				// NOT OK!
-			} else {
-				// not expected ... ?
-				throw LogicException("Unexpected return value: " . $import_status);
 			}
 
 			$imported_rows[] = $row;
