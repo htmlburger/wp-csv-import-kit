@@ -4,6 +4,7 @@ namespace Carbon_CSV;
 
 use \Carbon_Validator as Validator;
 use \Carbon_FileUpload as Validator_FileUpload;
+use \SplFileObject as File;
 
 class Import_Page {
 	static $instance_count = 0;
@@ -141,6 +142,10 @@ class Import_Page {
 			wp_send_json( $return );
 		}
 
+		$encoding  = $_POST['encoding'];
+		$separator = $_POST['separator'];
+		$enclosure = stripslashes( $_POST['enclosure'] );
+
 		// move file and generate token
 		if ( ! function_exists( 'wp_handle_upload' ) ) {
 			require_once( ABSPATH . 'wp-admin/includes/file.php' );
@@ -154,7 +159,8 @@ class Import_Page {
 			update_option( 'crb_import_' . $token, $file['file'] ); // save url?
 			update_option( 'crb_import_' . $token . '_started', current_time( 'timestamp' ) );
 
-			$csv = new CsvFile( $file['file'] );
+			$csv = new CsvFile( $file['file'], $encoding, $enclosure, '\\', File::READ_CSV | File::READ_AHEAD | File::SKIP_EMPTY );
+			$csv->set_encoding( $encoding );
 			$this->import_process->set_csv($csv);
 			$this->import_process->will_start();
 
@@ -164,6 +170,11 @@ class Import_Page {
 			$return['progress_bar']['total'] = $csv->count();
 			$return['next_action'] = 'import_row' . $this->current_instance;
 			$return['message'] = __( 'Import process started.', 'crb' );
+			$return['data'] = array(
+				'encoding'  => $encoding,
+				'separator' => $separator,
+				'enclosure' => $enclosure
+			);
 		} else {
 			$return['message'] = $file['error'];
 		}
@@ -173,6 +184,9 @@ class Import_Page {
 
 	public function progress() {
 		$action = isset( $_POST['action'] ) ? $_POST['action'] : false;
+		$encoding = $_POST['encoding'];
+		$separator = $_POST['separator'];
+		$enclosure = stripslashes( $_POST['enclosure'] );
 
 		$return = array(
 			'status'  => 'error',
@@ -202,7 +216,8 @@ class Import_Page {
 			wp_send_json( $return );
 		}
 
-		$csv = new CsvFile( $file );
+		$csv = new CsvFile( $file, $separator, $enclosure, '\\', File::READ_CSV | File::READ_AHEAD | File::SKIP_EMPTY );
+		$csv->set_encoding( $encoding );
 
 		$this->import_process->set_csv($csv);
 
@@ -215,6 +230,10 @@ class Import_Page {
 		$return = array(
 			'status'  => 'success'
 		);
+
+		$encoding = $_POST['encoding'];
+		$separator = $_POST['separator'];
+		$enclosure = stripslashes( $_POST['enclosure'] );
 
 		if ( $this->current_action === 'import_ended' . $this->current_instance ) {
 			$this->import_process->ended();
@@ -255,6 +274,9 @@ class Import_Page {
 		} else {
 			$next_action = 'import_row';
 			$return['data']['rows'] = $imported_rows;
+			$return['data']['encoding'] = $encoding;
+			$return['data']['separator'] = $separator;
+			$return['data']['enclosure'] = $enclosure;
 		}
 
 		$return['step'] = $this->step += 1;

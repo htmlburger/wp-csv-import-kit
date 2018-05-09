@@ -120,7 +120,10 @@ if ( document.getElementById('crb-import-app') ) {
 						var data = {
 							action: response.data.next_action,
 							token: response.data.token,
-							step: response.data.step
+							step: response.data.step,
+							enclosure: response.data.data.enclosure,
+							encoding: response.data.data.encoding,
+							separator: response.data.data.separator,
 						};
 
 						var formData = new FormData();
