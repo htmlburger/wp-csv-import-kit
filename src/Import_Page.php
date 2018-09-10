@@ -159,7 +159,7 @@ class Import_Page {
 			update_option( 'crb_import_' . $token, $file['file'] ); // save url?
 			update_option( 'crb_import_' . $token . '_started', current_time( 'timestamp' ) );
 
-			$csv = new CsvFile( $file['file'], $encoding, $enclosure, '\\', File::READ_CSV | File::READ_AHEAD | File::SKIP_EMPTY );
+			$csv = new CsvFile( $file['file'], $separator, $enclosure, '\\', File::READ_CSV | File::READ_AHEAD | File::SKIP_EMPTY );
 			$csv->set_encoding( $encoding );
 			$this->import_process->set_csv($csv);
 			$this->import_process->will_start();
