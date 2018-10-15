@@ -121,10 +121,13 @@ if ( document.getElementById('crb-import-app') ) {
 							action: response.data.next_action,
 							token: response.data.token,
 							step: response.data.step,
-							enclosure: response.data.data.enclosure,
-							encoding: response.data.data.encoding,
-							separator: response.data.data.separator,
 						};
+
+						if ( response.data.hasOwnProperty('data') ) {
+							data.enclosure = response.data.data.enclosure;
+							data.encoding = response.data.data.encoding;
+							data.separator = response.data.data.separator;
+						}
 
 						var formData = new FormData();
 						for( var key in data ) {
